@@ -414,6 +414,7 @@ struct LCJITLessDiagnoseView : View {
                 }
 
             }
+            .lcScreen()
             .navigationTitle("lc.settings.jitlessDiagnose".loc)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

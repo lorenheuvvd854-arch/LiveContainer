@@ -142,6 +142,7 @@ struct LCMultiLCManagementView : View, InstallAnotherLCButtonDelegate {
                 ActivityViewController(activityItems: [shareURL])
             }
         }
+        .lcScreen()
         .navigationTitle("lc.settings.multiLC".loc)
         .navigationBarTitleDisplayMode(.inline)
     }

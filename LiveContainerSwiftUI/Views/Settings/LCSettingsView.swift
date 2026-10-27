@@ -377,6 +377,7 @@ struct LCSettingsView: View {
                     }
                 }
             }
+            .lcScreen()
             .navigationBarTitle("lc.tabView.settings".loc)
             .alert("lc.common.error".loc, isPresented: $errorShow){
             } message: {

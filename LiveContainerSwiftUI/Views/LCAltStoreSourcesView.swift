@@ -540,6 +540,7 @@ struct LCSourcesView: View {
                     }
                 }
             }
+            .lcScreen()
             .navigationTitle("lc.tabView.sources".loc)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

@@ -131,7 +131,11 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                 })
                 .hidden()
                 
-                LazyVStack(spacing: LCDesign.Spacing.list) {
+                if searchContext.debouncedQuery.isEmpty {
+                    LCAppsHero(appCount: sharedModel.isHiddenAppUnlocked ? filteredApps.count + filteredHiddenApps.count : filteredApps.count)
+                }
+
+                LazyVGrid(columns: LCDesign.gridColumns, spacing: LCDesign.Spacing.list) {
                     ForEach(filteredApps, id: \.self) { app in
                         LCAppBanner(appModel: app, delegate: self)
                     }
@@ -143,14 +147,15 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                 VStack {
                     if LCUtils.appGroupUserDefault.bool(forKey: "LCStrictHiding") {
                         if sharedModel.isHiddenAppUnlocked {
-                            LazyVStack(spacing: LCDesign.Spacing.list) {
+                            VStack(spacing: LCDesign.Spacing.list) {
                                 LCSectionHeader(title: "lc.appList.hiddenApps".loc, systemImage: "eye.slash")
-                                
-                                ForEach(filteredHiddenApps, id: \.self) { app in
-                                    LCAppBanner(appModel: app, delegate: self)
+
+                                LazyVGrid(columns: LCDesign.gridColumns, spacing: LCDesign.Spacing.list) {
+                                    ForEach(filteredHiddenApps, id: \.self) { app in
+                                        LCAppBanner(appModel: app, delegate: self)
+                                    }
+                                    .transition(.scale)
                                 }
-                                .transition(.scale)
-                                
                             }
                             .padding()
                             .transition(.opacity)
@@ -162,18 +167,20 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                             }
                         }
                     } else if sharedModel.hiddenApps.count > 0 {
-                        LazyVStack(spacing: LCDesign.Spacing.list) {
+                        VStack(spacing: LCDesign.Spacing.list) {
                             LCSectionHeader(title: "lc.appList.hiddenApps".loc, systemImage: "eye.slash")
-                            ForEach(filteredHiddenApps, id: \.self) { app in
-                                if sharedModel.isHiddenAppUnlocked {
-                                    LCAppBanner(appModel: app, delegate: self)
-                                } else {
-                                    LCAppSkeletonBanner()
+                            LazyVGrid(columns: LCDesign.gridColumns, spacing: LCDesign.Spacing.list) {
+                                ForEach(filteredHiddenApps, id: \.self) { app in
+                                    if sharedModel.isHiddenAppUnlocked {
+                                        LCAppBanner(appModel: app, delegate: self)
+                                    } else {
+                                        LCAppSkeletonBanner()
+                                    }
                                 }
-                            }
-                            .animation(.easeInOut, value: sharedModel.isHiddenAppUnlocked)
-                            .onTapGesture {
-                                Task { await authenticateUser() }
+                                .animation(.easeInOut, value: sharedModel.isHiddenAppUnlocked)
+                                .onTapGesture {
+                                    Task { await authenticateUser() }
+                                }
                             }
                         }
                         .padding()
@@ -202,8 +209,7 @@ struct LCAppListView : View, LCAppBannerDelegate, LCAppModelDelegate {
                     onAppear()
                 }
             }
-            // Grouped background so the secondary-grouped cards read as raised surfaces.
-            .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+            .lcScreen()
             .navigationTitle("lc.appList.myApps".loc)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

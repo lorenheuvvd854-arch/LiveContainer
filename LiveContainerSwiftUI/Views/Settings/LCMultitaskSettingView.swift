@@ -86,6 +86,7 @@ struct LCMultitaskSettingView: View {
                 }
             }
         }
+        .lcScreen()
         .navigationTitle("lc.appBanner.multitask".loc)
         .navigationBarTitleDisplayMode(.inline)
     }

@@ -19,35 +19,51 @@ struct LCTabView: View {
     @Environment(\.scenePhase) var scenePhase
     @StateObject var downloadHelper = DownloadHelper()
 
+    @State private var visitedTabs: Set<LCTabIdentifier> = [.apps]
+
     let pub = NotificationCenter.default.publisher(for: UIScene.didDisconnectNotification)
+
+    var visibleTabs: [LCFloatingTabBar.Item] {
+        var items: [LCFloatingTabBar.Item] = []
+        let primary = DataManager.shared.model.multiLCStatus != 2
+        if primary {
+            items.append(.init(id: .sources, title: "lc.tabView.sources".loc, icon: "books.vertical.fill"))
+        }
+        items.append(.init(id: .apps, title: "lc.tabView.apps".loc, icon: "square.stack.3d.up.fill"))
+        if primary {
+            items.append(.init(id: .tweaks, title: "lc.tabView.tweaks".loc, icon: "wrench.and.screwdriver.fill"))
+        }
+        items.append(.init(id: .settings, title: "lc.tabView.settings".loc, icon: "gearshape.fill"))
+        return items
+    }
+
+    @ViewBuilder
+    func tabContent(_ tab: LCTabIdentifier) -> some View {
+        switch tab {
+        case .sources: LCSourcesView()
+        case .apps: LCAppListView()
+        case .tweaks: LCTweaksView()
+        case .settings: LCSettingsView()
+        }
+    }
     
     var body: some View {
-        TabView(selection: $sharedModel.selectedTab) {
-            if DataManager.shared.model.multiLCStatus != 2 {
-                LCSourcesView()
-                    .tabItem {
-                        Label("lc.tabView.sources".loc, systemImage: "books.vertical.fill")
-                    }
-                    .tag(LCTabIdentifier.sources)
-            }
-            LCAppListView()
-                .tabItem {
-                    Label("lc.tabView.apps".loc, systemImage: "square.stack.3d.up.fill")
+        ZStack {
+            ForEach(visibleTabs.map { $0.id }, id: \.self) { tab in
+                if visitedTabs.contains(tab) || sharedModel.selectedTab == tab {
+                    let isSelected = sharedModel.selectedTab == tab
+                    tabContent(tab)
+                        .opacity(isSelected ? 1 : 0)
+                        .allowsHitTesting(isSelected)
+                        .accessibilityHidden(!isSelected)
                 }
-                .tag(LCTabIdentifier.apps)
-            if DataManager.shared.model.multiLCStatus != 2 {
-                LCTweaksView()
-                    .tabItem{
-                        Label("lc.tabView.tweaks".loc, systemImage: "wrench.and.screwdriver.fill")
-                    }
-                    .tag(LCTabIdentifier.tweaks)
             }
-            
-            LCSettingsView()
-                .tabItem {
-                    Label("lc.tabView.settings".loc, systemImage: "gearshape.fill")
-                }
-                .tag(LCTabIdentifier.settings)
+        }
+        .safeAreaInset(edge: .bottom) {
+            LCFloatingTabBar(items: visibleTabs, selection: $sharedModel.selectedTab)
+        }
+        .onChange(of: sharedModel.selectedTab) { tab in
+            visitedTabs.insert(tab)
         }
         .downloadAlert(helper: downloadHelper)
         .environmentObject(downloadHelper)
